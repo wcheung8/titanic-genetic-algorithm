@@ -85,6 +85,13 @@ test_data = np.delete(test_data,[1,6,8],1) # Remove the name data, cabin and tic
 titanic_x = train_data[0::,1::]
 titanic_y = train_data[0::,0]
 
+ind = int(len(titanic_x) * .8)
+train_x = titanic_x[:ind]
+test_x = titanic_x[ind:]
+
+train_y = titanic_y[:ind]
+train_y = titanic_y[ind:]
+
 ##############################################################################
 
 creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
@@ -122,7 +129,7 @@ def evalSymbReg(individual, x, y, pset):
         if t[0] == int(t[1]):
             correct+=1
 
-    return len(y)-correct
+    return (len(y)-correct) / len(y)
 
 toolbox.register("evaluate", evalSymbReg, x=titanic_x, y=titanic_y, pset=pset)
 toolbox.register("select", tools.selTournament, tournsize=3)
@@ -202,6 +209,10 @@ print("-- End of (successful) evolution --")
 
 best_ind = tools.selBest(pop, 1)[0]
 print("Best individual is %s, %s" % (best_ind, best_ind.fitness.values))
+
+worst_ind = tools.selWorst(pop, 1)[0]
+print("Worst individual is %s, %s" % (worst_ind, worst_ind.fitness.values))
+
 
 plt.plot(gen, avg_list, label="average")
 plt.plot(gen, min_list, label="minimum")
