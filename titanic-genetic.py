@@ -113,16 +113,16 @@ def evalSymbReg(individual, x, y, pset):
     func = gp.compile(expr=individual, pset=pset)
     r = []
     for z in x:
-        for g in z:
-            print(type(g))
-        a = func(z[0], z[1], z[2], z[3], z[4], z[5], z[6])
-        print(a)
+
+        a = func(float(z[0]), float(z[1]), float(z[2]),float(z[3]),float(z[4]),float(z[5]),float(z[6]))
         r.append(a)
     results = [0 if m > 0 else 1 for m in r]
     correct = 0
     for t in zip(results, y):
-        correct += 1 if t[0] == t[1] else 0
-    return correct
+        if t[0] == int(t[1]):
+            correct+=1
+
+    return len(y)-correct
 
 toolbox.register("evaluate", evalSymbReg, x=titanic_x, y=titanic_y, pset=pset)
 toolbox.register("select", tools.selTournament, tournsize=3)
@@ -144,8 +144,9 @@ pop = toolbox.population(n=300)
 
 # Evaluate the entire population
 fitnesses = list(map(toolbox.evaluate, pop))
+
 for ind, fit in zip(pop, fitnesses):
-    ind.fitness.values = fit
+    ind.fitness.values = tuple([fit])
 
 # Begin the evolution
 for g in gen:
@@ -173,7 +174,7 @@ for g in gen:
     fitnesses = map(toolbox.evaluate, invalid_ind)
 
     for ind, fit in zip(invalid_ind, fitnesses):
-        ind.fitness.values = fit
+        ind.fitness.values = tuple([fit])
 
     # Replace population
     pop[:] = offspring
