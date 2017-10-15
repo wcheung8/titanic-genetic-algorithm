@@ -101,7 +101,7 @@ def protectedDiv(x, y):
     if y != 0:
         return x/y
     else:
-        return 0
+        return 1
 
 pset = gp.PrimitiveSet("MAIN", arity=7)
 pset.addPrimitive(np.add, arity=2)
