@@ -84,20 +84,19 @@ for i in range(np.size(test_data[0::,0])):
 test_data = np.delete(test_data,[1,6,8],1) # Remove the name data, cabin and ticket
 
 titanic_x = train_data[0::,1::]
+titanic_x = titanic_x / np.linalg.norm(titanic_x)
 titanic_y = train_data[0::,0]
-# titanic_x = titanic_x / np.linalg.norm(titanic_x)
 
-
-# split into train and test sets
 ind = int(len(titanic_x) * .8)
 train_x = titanic_x[:ind]
-train_y = titanic_y[:ind]
 test_x = titanic_x[ind:]
-test_y = titanic_y[ind:]
+
+train_y = titanic_y[:ind]
+train_y = titanic_y[ind:]
 
 ##############################################################################
 
-creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
+creator.create("FitnessMin", base.Fitness, weights=(-1.0,-1.0))
 creator.create("Individual", gp.PrimitiveTree, fitness=creator.FitnessMin)
 
 def inverse(x):
@@ -133,24 +132,18 @@ def evalSymbReg(individual, x, y, pset):
         a = func(float(z[0]), float(z[1]), float(z[2]),float(z[3]),float(z[4]),float(z[5]),float(z[6]))
         r.append(a)
     results = [0 if m > 0 else 1 for m in r]
-    fp = 0
-    fn = 0
+    correct = 0
     for t in zip(results, y):
-        if t[0] != int(t[1]):
-            if int(t[1]):
-                fp += 1
-            else:
-                fn += 1
+        if t[0] == int(t[1]):
+            correct+=1
 
-    return fp, fn
+    return (len(y)-correct) / len(y)
 
 toolbox.register("evaluate", evalSymbReg, x=titanic_x, y=titanic_y, pset=pset)
 toolbox.register("select", tools.selTournament, tournsize=3)
 toolbox.register("mate", gp.cxOnePoint)
 toolbox.register("expr_mut", gp.genFull, min_=0, max_=2)
 toolbox.register("mutate", gp.mutUniform, expr=toolbox.expr_mut, pset=pset)
-
-#toolbox.register()
 
 toolbox.decorate("mate", gp.staticLimit(key=operator.attrgetter("height"), max_value=17))
 toolbox.decorate("mutate", gp.staticLimit(key=operator.attrgetter("height"), max_value=17))
@@ -226,39 +219,12 @@ print("Best individual is %s, %s" % (best_ind, best_ind.fitness.values))
 worst_ind = tools.selWorst(pop, 1)[0]
 print("Worst individual is %s, %s" % (worst_ind, worst_ind.fitness.values))
 
-a_given_individual = toolbox.population(n=1)[0]
-a_given_individual.fitness.values = toolbox.evaluate(a_given_individual)
+paretoFront = tools.ParetoFront()
+paretoFront.update(pop)
+print("Pareto Front:")
+for p in paretoFront:
+    print("%s, %s" % (p, p.fitness.values))
 
-def pareto_dominance(ind1, ind2):
-    not_equal = False
-    for value_1, value_2 in zip(ind1.fitness.values, ind2.fitness.values):
-        if value_1 > value_2:
-            return False
-        elif value_1 < value_2:
-            not_equal = True
-    return not_equal
-
-dominated = [ind for ind in pop if pareto_dominance(a_given_individual, ind)]
-dominators = [ind for ind in pop if pareto_dominance(ind, a_given_individual)]
-others = [ind for ind in pop if not ind in dominated and not ind in dominators]
-    
-for ind in dominators: plt.plot(ind.fitness.values[0], ind.fitness.values[1], 'r.', alpha=0.7)
-for ind in dominated: plt.plot(ind.fitness.values[0], ind.fitness.values[1], 'g.', alpha=0.7)
-for ind in others: plt.plot(ind.fitness.values[0], ind.fitness.values[1], 'k.', alpha=0.7, ms=3)
-plt.plot(a_given_individual.fitness.values[0], a_given_individual.fitness.values[1], 'bo', ms=6);
-plt.xlabel('Mean Squared Error');plt.ylabel('Tree Size');
-plt.title('Objective space');
-plt.tight_layout()
-plt.show()
-    
-# paretoFront = tools.ParetoFront()
-# paretoFront.update(pop)
-# print("Pareto Front:")
-# for p in paretoFront:
-    # print("%s, %s" % (p, p.fitness.values))
-
-    
-    
 plt.plot(gen, avg_list, label="average")
 plt.plot(gen, min_list, label="minimum")
 plt.plot(gen, max_list, label="maximum")
