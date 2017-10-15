@@ -97,11 +97,22 @@ train_y = titanic_y[ind:]
 creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
 creator.create("Individual", gp.PrimitiveTree, fitness=creator.FitnessMin)
 
+def protectedDiv(x, y):
+    if y != 0:
+        return x/y
+    else:
+        return 0
+
 pset = gp.PrimitiveSet("MAIN", arity=7)
 pset.addPrimitive(np.add, arity=2)
 pset.addPrimitive(np.subtract, arity=2)
 pset.addPrimitive(np.multiply, arity=2)
+pset.addPrimitive(protectedDiv, arity=2)
 pset.addPrimitive(np.negative, arity=1)
+pset.addPrimitive(np.sin, arity=1)
+pset.addPrimitive(np.cos, arity=1)
+pset.addPrimitive(np.maximum, arity=2)
+pset.addPrimitive(np.minimum, arity=2)
 pset.renameArguments(ARG0='Pclass')
 pset.renameArguments(ARG1='Sex')
 pset.renameArguments(ARG2='Age')
@@ -213,6 +224,11 @@ print("Best individual is %s, %s" % (best_ind, best_ind.fitness.values))
 worst_ind = tools.selWorst(pop, 1)[0]
 print("Worst individual is %s, %s" % (worst_ind, worst_ind.fitness.values))
 
+paretoFront = tools.ParetoFront()
+paretoFront.update(pop)
+print("Pareto Front:")
+for p in paretoFront:
+    print("%s, %s" % (p, p.fitness.values))
 
 plt.plot(gen, avg_list, label="average")
 plt.plot(gen, min_list, label="minimum")
